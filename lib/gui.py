@@ -225,23 +225,19 @@ class MyFrame(wx.Frame):
 			self.SetStatusText("Parser aborted...")
 
 	def FixMaxChoices(self, AssessmentItems):
-		try:
-			os.mkdir(f'{AssessmentItems}_export')
-		except FileExistsError:
-			pass
-
 		files = [ file.path for file in os.scandir(AssessmentItems) if file.is_file()]
 		xml_files = [ xml for xml in files if xml.endswith('.xml') ]
 		for xml_file in xml_files:
 			question_xml = open(xml_file, 'r')
 			question_text = question_xml.read()
 			questions_text = self.ReplaceMaxChoices(question_text)
-			path = xml_file.replace(f'{AssessmentItems}/', '')
-			file = open(f'{AssessmentItems}_export/{path}', "a")
+			filename = xml_file.replace(f'{AssessmentItems}/', '')
+			folder_name = AssessmentItems.replace('/assessmentItems', '')
+			
+			file = open(f'{folder_name}/{filename}', "a")
 			file.write(questions_text)
 			file.close()
 		shutil.rmtree(AssessmentItems)
-		os.rename(f'{AssessmentItems}_export', AssessmentItems)
 
 	def ReplaceMaxChoices(self, questionText):
 		item_body = re.findall(r'<itemBody>.*?</itemBody', questionText, re.DOTALL)[0]

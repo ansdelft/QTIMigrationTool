@@ -1980,7 +1980,7 @@ class QTIItem(InstructureHelperContainer):
 		self.item.SetIdentifier(value);
 		self.resource.GetLOM().GetGeneral().AddIdentifier(LOMIdentifier(None,value))
 		cp=self.GetRoot().cp
-		self.fName=cp.GetUniqueFileName(os.path.join("assessmentItems", self.resource.id+".xml"))
+		self.fName=cp.GetUniqueFileName(os.path.join(self.resource.id+".xml"))
 
 	def SetAttribute_title (self,value):
 		self.item.SetTitle(value)
