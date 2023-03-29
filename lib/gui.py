@@ -219,7 +219,7 @@ class MyFrame(wx.Frame):
 				self.options.cpPath=''
 		if fileNames:
 			self.ProcessFiles(fileNames)
-			self.FixMaxChoices(f'{self.options.cpPath}/assessmentItems')
+			self.FixMaxChoices(self.options.cpPath)
 		else:
 			print("No input set. Parser aborted...")
 			self.SetStatusText("Parser aborted...")
@@ -231,23 +231,42 @@ class MyFrame(wx.Frame):
 			question_xml = open(xml_file, 'r')
 			question_text = question_xml.read()
 			questions_text = self.ReplaceMaxChoices(question_text)
+			questions_text = self.RemoveSemiColons(questions_text)
 			filename = xml_file.replace(f'{AssessmentItems}/', '')
 			folder_name = AssessmentItems.replace('/assessmentItems', '')
 			
+			os.remove(f'{folder_name}/{filename}')
 			file = open(f'{folder_name}/{filename}', "a")
 			file.write(questions_text)
 			file.close()
-		shutil.rmtree(AssessmentItems)
 
 	def ReplaceMaxChoices(self, questionText):
-		item_body = re.findall(r'<itemBody>.*?</itemBody', questionText, re.DOTALL)[0]
+		item_body = re.findall(r'<itemBody>.*?</itemBody', questionText, re.DOTALL)
+		if len(item_body) == 0:
+			return questionText
+		item_body_text = item_body[0]
 		response_cases = re.findall(r'<(responseIf>.*?</responseIf|responseElseIf>.*?</responseElseIf)', questionText, re.DOTALL)
 		amount_correct = 0
 		for response_case in response_cases:
 			if response_case.find('<variable identifier="MC"/>') != -1 and len(re.findall(r'<baseValue baseType="(integer|float)">1</baseValue>', response_case)) > 0:
 				amount_correct += 1
-		replacement = re.sub(r'maxChoices="."', f'maxChoices="{amount_correct}"', item_body)
-		return questionText.replace(item_body, replacement)
+
+		replacement = re.sub(r'maxChoices="."', f'maxChoices="{amount_correct}"', item_body_text)
+		return questionText.replace(item_body_text, replacement)
+
+	def RemoveSemiColons(self, questionsText):
+		item_body = re.findall(r'<itemBody>.*?</itemBody', questionsText, re.DOTALL)
+		if len(item_body) == 0:
+			return questionsText
+		item_body_text = item_body[0]
+		images = re.findall(r';<img.*/>;', questionsText, re.DOTALL)
+		replacement = item_body_text
+		for image in images:
+			image_replacement = re.search(r'<img.*?/>', image).group(0)
+			replacement = re.sub(image, image_replacement, item_body_text)
+
+		return questionsText.replace(item_body_text, replacement)
+
 
 	def ProcessFiles(self,fileNames):
 		self.SetStatusText("Parsing input files...")

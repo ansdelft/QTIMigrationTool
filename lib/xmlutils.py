@@ -47,7 +47,7 @@ def XMLString (src):
 			elif c=='<':
 				dst=dst+"<"
 			elif c=='>':
-				dst=dst+">;"
+				dst=dst+">"
 			elif c=='"':
 				dst=dst+'"'
 			else:

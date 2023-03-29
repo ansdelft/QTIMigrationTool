@@ -38,6 +38,7 @@ import os, sys, re
 from xml.sax import handler, SAXParseException
 from lxml import etree, sax
 import io
+import ipdb
 from random import randint
 try:
 	import vobject
@@ -1937,7 +1938,7 @@ class QTIItem(InstructureHelperContainer):
 		self.item=AssessmentItem()
 		self.resource=CPResource()
 		self.resource.SetType("imsqti_item_xmlv2p0")
-		self.resource.SetIdentifier("%s" % randint(1,100000))
+		self.resource.id = 'ID_' + self.parent.path.split('/')[-1].replace('.xml', '')
 		self.educationalMetadata=None
 		self.variables={'FEEDBACK':None}
 		self.declareFeedback=0
@@ -1980,7 +1981,7 @@ class QTIItem(InstructureHelperContainer):
 		self.item.SetIdentifier(value);
 		self.resource.GetLOM().GetGeneral().AddIdentifier(LOMIdentifier(None,value))
 		cp=self.GetRoot().cp
-		self.fName=cp.GetUniqueFileName(os.path.join(self.resource.id+".xml"))
+		self.fName=cp.GetUniqueFileName(os.path.join("assessmentItems", self.resource.id+".xml"))
 
 	def SetAttribute_title (self,value):
 		self.item.SetTitle(value)
@@ -6344,7 +6345,9 @@ class QTIParserV1(handler.ContentHandler, handler.ErrorHandler):
 				f=open(path,'rb')
 				try:
 					self.Parse(f,path)
-				except QTIException:
+				except:
+					ipdb.set_trace()
+					print("\n\n\n\n\n\n\n=======================================================================\n\n\n\n")
 					print(sys.exc_info()[0])
 				finally:
 					f.close()
@@ -6367,7 +6370,7 @@ class QTIParserV1(handler.ContentHandler, handler.ErrorHandler):
 				sax.saxify(tree, self)
 			else:
 				print("ERROR: parsing %s"%path)
-		except (etree.XMLSyntaxError, SAXParseException):
+		except:
 			if self.gotRoot:
 				print("WARNING: Error following final close tag ignored")
 				print(str(sys.exc_info()[0])+": "+str(sys.exc_info()[1]))
