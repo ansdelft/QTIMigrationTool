@@ -128,87 +128,24 @@ def fix_hotspot_question(question_text):
 def remove_p_tags(question_text):
 	return question_text.replace('<div class="html"><p></div>', '').replace('<div class="text"><p></div>', '')
 
-if __name__ == '__main__':
+def run(source_folder, destination_folder):
 	wd=os.path.dirname(__file__)
 	sys.path.append(os.path.join(wd,"lib"))
-	try:
-		import imsqtiv1
-	except:
-		print("Problem loading extra modules in %s/lib"%wd)
-		print(" ...error was: %s (%s)"%(str(sys.exc_info()[0]),str(sys.exc_info()[1])))
-		sys.exit(1)
+	import imsqtiv1
 
 	options=imsqtiv1.QTIParserV1Options()
 	fileNames=[]
 	OVERWRITE=False
-	for x in sys.argv[1:]:
-		# check for options here
-		if x[:8].lower()=="--cpout=":
-			options.cpPath=os.path.abspath(x[8:])
-		elif x.lower()=="--ucvars":
-			options.ucVars=1
-		elif x.lower()=="--qmdextensions":
-			options.qmdExtensions=1
-			if not options.vobject:
-				SPLASH_LOG.append("Warning: qmd_author and qmd_organization support disabled")
-				SPLASH_LOG.append(" ...try installing VObject.  See: http://vobject.skyhouseconsulting.com/")
-		elif x.lower()=="--forcefibfloat":
-			options.forceFloat=1
-		elif x[:7].lower()=="--lang=":
-			options.lang=x[7:]
-		elif x.lower()=="--nocomment":
-			options.noCmment=1
-		elif x[:9].lower()=="--dtdloc=":
-			options.dtdDir=os.path.abspath(x[9:])
-		elif x.lower()=="--help":
-			SPLASH_LOG=SPLASH_LOG+HELP_TEXT
-			NO_GUI=1
-		elif x.lower()=="--version":
-			NO_GUI=1
-			fileNames=[]
-			break
-		elif x.lower()=="--nogui":
-			NO_GUI=1
-		elif x.lower()=="--overwrite":
-			OVERWRITE=1
-		elif x[:14].lower()=="--pathprepend=":
-			options.prepend_path = x[14:]
-		elif x.lower()=="--createerrorfiles":
-			options.create_error_files = 1
-		else:
-			fileNames.append(x)
 
-	if not options.dtdDir:
-		options.dtdDir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'schemas'))
+	options.cpPath = destination_folder
+	fileNames = [source_folder]
 
-	if options.cpPath and os.path.exists(options.cpPath):
-		if os.path.isdir(options.cpPath):
-				SPLASH_LOG.append("Warning: CP Directory already exists, overwriting.")
-		else:
-			SPLASH_LOG.append("Warning: --cpout points to file, ignoring")
-			options.cpPath=''
-
-	if not NO_GUI:
-		try:
-			import gui
-		except:
-			SPLASH_LOG.append("Problem loading GUI module, defaulting to command-line operation")
-			SPLASH_LOG.append(" ...error was: %s (%s)"%(str(sys.exc_info()[0]),str(sys.exc_info()[1])))
-			NO_GUI=1
-
-	if NO_GUI:
-		for line in SPLASH_LOG:
-			print(line)
-		parser=imsqtiv1.QTIParserV1(options)
-		parser.ProcessFiles(os.getcwd(),fileNames)
-		parser.DumpCP()
-	else:
-		print("Application is active...")
-		print("Do not close this window because it will also close the GUI!")
-		app = gui.MyApp(SPLASH_LOG,options,fileNames)
-		app.MainLoop()
+	parser=imsqtiv1.QTIParserV1(options)
+	parser.ProcessFiles(os.getcwd(),fileNames)
+	parser.DumpCP()
 
 	files = [ file.path for file in os.scandir(f"{options.cpPath}/assessmentItems") if file.is_file()]
+	print(len(files))
 	for xml_file in files:
 		question_xml = open(xml_file, 'r')
 		question_text = question_xml.read()
@@ -232,5 +169,4 @@ if __name__ == '__main__':
 
 	filenames=None
 	parser=None
-	sys.exit(0)
 
